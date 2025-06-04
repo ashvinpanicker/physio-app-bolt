@@ -10,13 +10,12 @@ class SpeechService {
   private constructor() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       this.synthesis = window.speechSynthesis;
-      if (this.synthesis.getVoices().length > 0) {
+      // Initialize voices immediately if available
+      this.setPreferredVoice();
+      // Also listen for voices changed event
+      this.synthesis.addEventListener('voiceschanged', () => {
         this.setPreferredVoice();
-      } else {
-        this.synthesis.addEventListener('voiceschanged', () => {
-          this.setPreferredVoice();
-        });
-      }
+      });
     }
   }
 
@@ -31,8 +30,9 @@ class SpeechService {
     if (!this.synthesis) return;
     
     const voices = this.synthesis.getVoices();
+    // Prefer English voices
     this.voice = voices.find(voice => 
-      voice.lang.startsWith('en-') && voice.localService
+      voice.lang.startsWith('en-')
     ) || voices[0];
   }
 
@@ -43,6 +43,8 @@ class SpeechService {
     pitch: number;
     voice?: SpeechSynthesisVoice | null;
   }) {
+    if (!settings) return;
+    
     this.enabled = settings.enabled;
     this.volume = settings.volume;
     this.rate = settings.rate;
@@ -55,12 +57,15 @@ class SpeechService {
   speak(text: string, priority: boolean = false) {
     if (!this.synthesis || !this.enabled) return;
 
+    // Cancel any ongoing speech if this is a priority message
     if (priority) {
       this.synthesis.cancel();
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.voice = this.voice;
+    if (this.voice) {
+      utterance.voice = this.voice;
+    }
     utterance.volume = this.volume;
     utterance.rate = this.rate;
     utterance.pitch = this.pitch;
@@ -69,26 +74,32 @@ class SpeechService {
   }
 
   announceExerciseStart(exerciseName: string, setNumber: number, totalSets: number) {
+    if (!this.enabled) return;
     this.speak(`${exerciseName}, set ${setNumber} of ${totalSets}`, true);
   }
 
   announceCountdown(number: number) {
+    if (!this.enabled) return;
     this.speak(number.toString());
   }
 
   announceRestPeriod(duration: number) {
+    if (!this.enabled) return;
     this.speak(`Rest period, ${duration} seconds`, true);
   }
 
   announceSetComplete() {
+    if (!this.enabled) return;
     this.speak("Set complete", true);
   }
 
   announceNextSet() {
+    if (!this.enabled) return;
     this.speak("Next set", true);
   }
 
   announceWorkoutComplete() {
+    if (!this.enabled) return;
     this.speak("Workout complete", true);
   }
 

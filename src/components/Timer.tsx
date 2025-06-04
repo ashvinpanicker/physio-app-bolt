@@ -23,7 +23,6 @@ const Timer: React.FC<TimerProps> = ({
   const { time, isActive, isPaused, start, pause, resume, reset } = useTimer(initialTime);
   const speechService = SpeechService.getInstance();
 
-  // Reset timer when initialTime changes
   useEffect(() => {
     reset(initialTime);
     if (autoStart) {
@@ -60,19 +59,6 @@ const Timer: React.FC<TimerProps> = ({
     return 'text-red-500';
   };
 
-  const handleReset = () => {
-    speechService.stop();
-    reset(initialTime);
-    start();
-  };
-
-  const handleSkip = () => {
-    speechService.stop();
-    if (onSkip) {
-      onSkip();
-    }
-  };
-
   return (
     <div className={`flex flex-col items-center ${className}`}>
       <div className="relative w-40 h-40 flex items-center justify-center mb-4">
@@ -95,8 +81,11 @@ const Timer: React.FC<TimerProps> = ({
           />
         </svg>
         
+        {/* Timer icon */}
+        <Clock className="absolute top-4 left-1/2 transform -translate-x-1/2 text-gray-500" size={24} />
+        
         {/* Time display */}
-        <div className={`text-4xl font-bold ${getColorClass()}`}>
+        <div className={`text-4xl font-bold ${getColorClass()} absolute`}>
           {formatTime(time)}
         </div>
       </div>
@@ -111,46 +100,39 @@ const Timer: React.FC<TimerProps> = ({
             <Play size={20} />
           </button>
         ) : isPaused ? (
-          <>
-            <button 
-              onClick={resume}
-              className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors"
-              aria-label="Resume timer"
-            >
-              <Play size={20} />
-            </button>
-            <button 
-              onClick={handleReset}
-              className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
-              aria-label="Restart timer"
-            >
-              <RotateCcw size={20} />
-            </button>
-            <button 
-              onClick={handleSkip}
-              className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
-              aria-label="Skip timer"
-            >
-              <X size={20} />
-            </button>
-          </>
+          <button 
+            onClick={resume}
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors"
+            aria-label="Resume timer"
+          >
+            <Play size={20} />
+          </button>
         ) : (
-          <>
-            <button 
-              onClick={pause}
-              className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
-              aria-label="Pause timer"
-            >
-              <Pause size={20} />
-            </button>
-            <button 
-              onClick={handleSkip}
-              className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
-              aria-label="Skip timer"
-            >
-              <X size={20} />
-            </button>
-          </>
+          <button 
+            onClick={pause}
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
+            aria-label="Pause timer"
+          >
+            <Pause size={20} />
+          </button>
+        )}
+        
+        <button 
+          onClick={() => reset(initialTime)}
+          className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-300 text-gray-700 hover:bg-gray-400 transition-colors"
+          aria-label="Reset timer"
+        >
+          <RotateCcw size={20} />
+        </button>
+        
+        {onSkip && (
+          <button 
+            onClick={onSkip}
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
+            aria-label="Skip timer"
+          >
+            <X size={20} />
+          </button>
         )}
       </div>
     </div>
