@@ -6,14 +6,18 @@ import SpeechService from '../services/speechService';
 interface TimerProps {
   initialTime: number;
   onComplete?: () => void;
+  onSkip?: () => void;
   autoStart?: boolean;
+  announceProgress?: boolean;
   className?: string;
 }
 
 const Timer: React.FC<TimerProps> = ({ 
   initialTime, 
   onComplete, 
+  onSkip,
   autoStart = false,
+  announceProgress = false,
   className = ''
 }) => {
   const { time, isActive, isPaused, start, pause, resume, reset } = useTimer(initialTime);
@@ -31,11 +35,16 @@ const Timer: React.FC<TimerProps> = ({
       if (onComplete) {
         onComplete();
       }
-    } else if (isActive && !isPaused && time <= 5) {
-      // Announce countdown for last 5 seconds
-      speechService.announceCountdown(time);
+    } else if (announceProgress && isActive && !isPaused) {
+      if (time <= 5) {
+        // Announce countdown for last 5 seconds
+        speechService.announceCountdown(time);
+      } else if (time % 30 === 0) {
+        // Announce every 30 seconds
+        speechService.speak(`${time} seconds remaining`);
+      }
     }
-  }, [time, onComplete, isActive, isPaused]);
+  }, [time, onComplete, isActive, isPaused, announceProgress]);
 
   // Format time as MM:SS
   const formatTime = (seconds: number): string => {
@@ -119,6 +128,16 @@ const Timer: React.FC<TimerProps> = ({
         >
           <RotateCcw size={20} />
         </button>
+
+        {onSkip && (
+          <button 
+            onClick={onSkip}
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
+            aria-label="Skip timer"
+          >
+            <Clock size={20} className="rotate-45" />
+          </button>
+        )}
       </div>
     </div>
   );

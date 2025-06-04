@@ -32,6 +32,8 @@ class SpeechService {
     const voices = this.synthesis.getVoices();
     // Prefer English voices
     this.voice = voices.find(voice => 
+      voice.lang.startsWith('en-') && !voice.name.includes('Google')
+    ) || voices.find(voice => 
       voice.lang.startsWith('en-')
     ) || voices[0];
   }
@@ -43,10 +45,12 @@ class SpeechService {
     pitch: number;
     voice?: SpeechSynthesisVoice | null;
   }) {
+    if (!settings) return;
+    
     this.enabled = settings.enabled;
-    this.volume = settings.volume || 1;
-    this.rate = settings.rate || 1;
-    this.pitch = settings.pitch || 1;
+    this.volume = settings.volume;
+    this.rate = settings.rate;
+    this.pitch = settings.pitch;
     if (settings.voice) {
       this.voice = settings.voice;
     }
@@ -78,8 +82,8 @@ class SpeechService {
   }
 
   announceCountdown(number: number) {
-    if (!this.enabled || number > 5) return; // Only announce last 5 seconds
-    this.speak(number.toString());
+    if (!this.enabled || number > 5) return;
+    this.speak(number.toString(), true);
   }
 
   announceRestPeriod(duration: number) {
@@ -99,7 +103,7 @@ class SpeechService {
 
   announceWorkoutComplete() {
     if (!this.enabled) return;
-    this.speak("Workout complete", true);
+    this.speak("Workout complete. Great job!", true);
   }
 
   stop() {
