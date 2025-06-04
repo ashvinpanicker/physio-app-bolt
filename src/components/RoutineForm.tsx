@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Exercise, Routine } from '../types/types';
-import { Plus, X, ChevronUp, ChevronDown, Brain } from 'lucide-react';
+import { Plus, X, ChevronUp, ChevronDown, Brain, Shuffle } from 'lucide-react';
 import ExerciseCard from './ExerciseCard';
 import ExerciseForm from './ExerciseForm';
 import ExerciseRecommendationService from '../services/exerciseRecommendationService';
@@ -19,9 +19,17 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routine, onSave, onCancel }) 
   const [nameError, setNameError] = useState<string | undefined>(undefined);
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [selectedInjuryType, setSelectedInjuryType] = useState<string>('');
+  const [recommendedExercises, setRecommendedExercises] = useState<Exercise[]>([]);
   
   const recommendationService = ExerciseRecommendationService.getInstance();
   const injuryTypes = recommendationService.getSupportedInjuryTypes();
+
+  useEffect(() => {
+    if (selectedInjuryType) {
+      const recommendations = recommendationService.getRecommendations(selectedInjuryType);
+      setRecommendedExercises(recommendations);
+    }
+  }, [selectedInjuryType]);
 
   const handleAddExercise = () => {
     setCurrentExercise(undefined);
@@ -65,11 +73,19 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routine, onSave, onCancel }) 
 
   const handleAddRecommendedExercises = () => {
     if (!selectedInjuryType) return;
-    
-    const recommendations = recommendationService.getRecommendations(selectedInjuryType);
-    setExercises([...exercises, ...recommendations]);
+    setExercises([...exercises, ...recommendedExercises]);
     setShowRecommendations(false);
     setSelectedInjuryType('');
+  };
+
+  const handleShuffleRecommendations = () => {
+    const shuffled = [...recommendedExercises]
+      .sort(() => Math.random() - 0.5)
+      .map(exercise => ({
+        ...exercise,
+        id: `${exercise.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      }));
+    setRecommendedExercises(shuffled);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -120,26 +136,39 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routine, onSave, onCancel }) 
           </div>
           
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select Injury Area
-            </label>
-            <select
-              value={selectedInjuryType}
-              onChange={(e) => setSelectedInjuryType(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select an area...</option>
-              {injuryTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Injury Area
+                </label>
+                <select
+                  value={selectedInjuryType}
+                  onChange={(e) => setSelectedInjuryType(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select an area...</option>
+                  {injuryTypes.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+              {selectedInjuryType && (
+                <button
+                  onClick={handleShuffleRecommendations}
+                  className="mt-6 p-2 text-gray-600 hover:text-blue-600 transition-colors"
+                  aria-label="Shuffle recommendations"
+                >
+                  <Shuffle size={20} />
+                </button>
+              )}
+            </div>
           </div>
           
           {selectedInjuryType && (
             <div className="space-y-4">
               <h3 className="font-medium text-gray-700">Recommended Exercises:</h3>
               <div className="space-y-2">
-                {recommendationService.getRecommendations(selectedInjuryType).map(exercise => (
+                {recommendedExercises.map(exercise => (
                   <ExerciseCard
                     key={exercise.id}
                     exercise={exercise}
