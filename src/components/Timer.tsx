@@ -17,7 +17,7 @@ const Timer: React.FC<TimerProps> = ({
   onComplete, 
   onSkip,
   autoStart = false,
-  announceProgress = false,
+  announceProgress = true,
   className = ''
 }) => {
   const { time, isActive, isPaused, start, pause, resume, reset } = useTimer(initialTime);
@@ -89,7 +89,7 @@ const Timer: React.FC<TimerProps> = ({
         <Clock className="absolute top-4 left-1/2 transform -translate-x-1/2 text-gray-500" size={24} />
         
         {/* Time display */}
-        <div className={`text-4xl font-bold ${getColorClass()} absolute`}>
+        <div className={`text-4xl font-bold ${getColorClass()}`}>
           {formatTime(time)}
         </div>
       </div>
