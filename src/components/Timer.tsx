@@ -1,24 +1,20 @@
 import React, { useEffect } from 'react';
 import useTimer from '../hooks/useTimer';
-import { Clock, Play, Pause, RotateCcw, X } from 'lucide-react';
+import { Clock, Play, Pause, RotateCcw } from 'lucide-react';
 import SpeechService from '../services/speechService';
 
 interface TimerProps {
   initialTime: number;
   onComplete?: () => void;
-  onSkip?: () => void;
   autoStart?: boolean;
   className?: string;
-  announceProgress?: boolean;
 }
 
 const Timer: React.FC<TimerProps> = ({ 
   initialTime, 
   onComplete, 
-  onSkip,
   autoStart = false,
-  className = '',
-  announceProgress = true
+  className = ''
 }) => {
   const { time, isActive, isPaused, start, pause, resume, reset } = useTimer(initialTime);
   const speechService = SpeechService.getInstance();
@@ -35,12 +31,10 @@ const Timer: React.FC<TimerProps> = ({
       if (onComplete) {
         onComplete();
       }
-    } else if (announceProgress && isActive && !isPaused) {
-      if (time <= 5) {
-        speechService.announceCountdown(time);
-      }
+    } else if (isActive && !isPaused && time <= 5) {
+      speechService.announceCountdown(time);
     }
-  }, [time, onComplete, announceProgress, isActive, isPaused]);
+  }, [time, onComplete, isActive, isPaused]);
 
   // Format time as MM:SS
   const formatTime = (seconds: number): string => {
@@ -124,16 +118,6 @@ const Timer: React.FC<TimerProps> = ({
         >
           <RotateCcw size={20} />
         </button>
-        
-        {onSkip && (
-          <button 
-            onClick={onSkip}
-            className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
-            aria-label="Skip timer"
-          >
-            <X size={20} />
-          </button>
-        )}
       </div>
     </div>
   );

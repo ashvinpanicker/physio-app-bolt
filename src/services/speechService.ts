@@ -43,12 +43,10 @@ class SpeechService {
     pitch: number;
     voice?: SpeechSynthesisVoice | null;
   }) {
-    if (!settings) return;
-    
     this.enabled = settings.enabled;
-    this.volume = settings.volume;
-    this.rate = settings.rate;
-    this.pitch = settings.pitch;
+    this.volume = settings.volume || 1;
+    this.rate = settings.rate || 1;
+    this.pitch = settings.pitch || 1;
     if (settings.voice) {
       this.voice = settings.voice;
     }
