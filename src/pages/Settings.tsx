@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { 
-  ArrowLeft, Mic, Volume2, SpeechIcon, 
-  HelpCircle, ChevronRight, Trash 
+  ArrowLeft, Mic, HelpCircle, 
+  ChevronRight, Trash 
 } from 'lucide-react';
 import SpeechService from '../services/speechService';
 
@@ -11,12 +11,7 @@ const Settings: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const navigate = useNavigate();
   const [showConfirmClear, setShowConfirmClear] = useState(false);
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const speechService = SpeechService.getInstance();
-
-  useEffect(() => {
-    setVoices(speechService.getVoices());
-  }, []);
 
   const handleVoiceToggle = () => {
     dispatch({
@@ -25,37 +20,8 @@ const Settings: React.FC = () => {
     });
   };
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch({
-      type: 'SET_VOICE_SETTINGS',
-      payload: { volume: parseFloat(e.target.value) }
-    });
-  };
-
-  const handleRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch({
-      type: 'SET_VOICE_SETTINGS',
-      payload: { rate: parseFloat(e.target.value) }
-    });
-  };
-
-  const handlePitchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch({
-      type: 'SET_VOICE_SETTINGS',
-      payload: { pitch: parseFloat(e.target.value) }
-    });
-  };
-
-  const handleVoiceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedVoice = voices.find(voice => voice.voiceURI === e.target.value);
-    dispatch({
-      type: 'SET_VOICE_SETTINGS',
-      payload: { voice: selectedVoice || null }
-    });
-  };
-
   const handleTestVoice = () => {
-    speechService.speak("This is a test of the voice settings.", true);
+    speechService.testVoice();
   };
 
   const handleClearData = () => {
@@ -104,75 +70,12 @@ const Settings: React.FC = () => {
             </div>
 
             {state.voiceSettings.enabled && (
-              <>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
-                        <Volume2 className="text-purple-600" size={16} />
-                      </div>
-                      <span className="text-gray-700">Volume</span>
-                    </div>
-                    <span className="text-sm text-gray-500">
-                      {Math.round(state.voiceSettings.volume * 100)}%
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={state.voiceSettings.volume}
-                    onChange={handleVolumeChange}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
-                        <SpeechIcon className="text-green-600" size={16} />
-                      </div>
-                      <span className="text-gray-700">Speech Rate</span>
-                    </div>
-                    <span className="text-sm text-gray-500">
-                      {state.voiceSettings.rate}x
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0.5"
-                    max="2"
-                    step="0.1"
-                    value={state.voiceSettings.rate}
-                    onChange={handleRateChange}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Voice</label>
-                  <select
-                    value={state.voiceSettings.voice?.voiceURI}
-                    onChange={handleVoiceChange}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                  >
-                    {voices.map(voice => (
-                      <option key={voice.voiceURI} value={voice.voiceURI}>
-                        {voice.name} ({voice.lang})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <button
-                  onClick={handleTestVoice}
-                  className="w-full px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
-                >
-                  Test Voice Settings
-                </button>
-              </>
+              <button
+                onClick={handleTestVoice}
+                className="w-full px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+              >
+                Test Voice Settings
+              </button>
             )}
           </div>
         </div>

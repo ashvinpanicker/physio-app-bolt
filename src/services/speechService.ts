@@ -4,7 +4,6 @@ class SpeechService {
   private voice: SpeechSynthesisVoice | null = null;
   private volume = 1;
   private rate = 1;
-  private pitch = 1;
   private enabled = true;
   private queue: SpeechSynthesisUtterance[] = [];
   private speaking = false;
@@ -12,16 +11,13 @@ class SpeechService {
   private constructor() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       this.synthesis = window.speechSynthesis;
-      
-      // Initialize voices
-      this.setPreferredVoice();
+      this.setDefaultVoice();
       
       // Listen for voices changed event
       this.synthesis.addEventListener('voiceschanged', () => {
-        this.setPreferredVoice();
+        this.setDefaultVoice();
       });
 
-      // Handle speech end events
       this.handleSpeechEvents();
     }
   }
@@ -40,6 +36,20 @@ class SpeechService {
     });
   }
 
+  private setDefaultVoice() {
+    if (!this.synthesis) return;
+    
+    const voices = this.synthesis.getVoices();
+    // Select a clear English voice
+    this.voice = voices.find(voice => 
+      voice.lang === 'en-US' && voice.name.includes('Samantha')
+    ) || voices.find(voice => 
+      voice.lang === 'en-US' && !voice.name.includes('Google')
+    ) || voices.find(voice => 
+      voice.lang === 'en-US'
+    ) || voices[0];
+  }
+
   private processQueue() {
     if (!this.synthesis || !this.enabled || this.speaking || this.queue.length === 0) return;
     
@@ -55,34 +65,9 @@ class SpeechService {
     return SpeechService.instance;
   }
 
-  private setPreferredVoice() {
-    if (!this.synthesis) return;
-    
-    const voices = this.synthesis.getVoices();
-    // Prefer English voices
-    this.voice = voices.find(voice => 
-      voice.lang.startsWith('en-') && !voice.name.includes('Google')
-    ) || voices.find(voice => 
-      voice.lang.startsWith('en-')
-    ) || voices[0];
-  }
-
-  setVoiceSettings(settings: {
-    enabled: boolean;
-    volume: number;
-    rate: number;
-    pitch: number;
-    voice?: SpeechSynthesisVoice | null;
-  }) {
+  setVoiceSettings(settings: { enabled: boolean }) {
     if (!settings) return;
-    
     this.enabled = settings.enabled;
-    this.volume = settings.volume;
-    this.rate = settings.rate;
-    this.pitch = settings.pitch;
-    if (settings.voice) {
-      this.voice = settings.voice;
-    }
   }
 
   speak(text: string, priority: boolean = false) {
@@ -94,7 +79,6 @@ class SpeechService {
     }
     utterance.volume = this.volume;
     utterance.rate = this.rate;
-    utterance.pitch = this.pitch;
 
     // Cancel current speech and clear queue for priority messages
     if (priority) {
@@ -105,6 +89,10 @@ class SpeechService {
 
     this.queue.push(utterance);
     this.processQueue();
+  }
+
+  testVoice() {
+    this.speak("Voice feedback is working correctly.", true);
   }
 
   announceExerciseStart(exerciseName: string, setNumber: number, totalSets: number) {
@@ -143,15 +131,6 @@ class SpeechService {
     this.synthesis.cancel();
     this.queue = [];
     this.speaking = false;
-  }
-
-  getVoices(): SpeechSynthesisVoice[] {
-    if (!this.synthesis) return [];
-    return this.synthesis.getVoices();
-  }
-
-  getCurrentVoice(): SpeechSynthesisVoice | null {
-    return this.voice;
   }
 }
 

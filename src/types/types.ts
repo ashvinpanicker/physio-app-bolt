@@ -48,8 +48,4 @@ export interface VoiceCommand {
 
 export interface VoiceSettings {
   enabled: boolean;
-  volume: number;
-  rate: number;
-  pitch: number;
-  voice: SpeechSynthesisVoice | null;
 }
