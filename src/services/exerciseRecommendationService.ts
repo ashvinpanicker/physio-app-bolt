@@ -147,6 +147,52 @@ const injuryAreas: InjuryArea[] = [
         instructions: 'Stand on edge of step, raise up on toes then lower heels below step level.'
       }
     ]
+  },
+  {
+    name: 'Wrist',
+    exercises: [
+      {
+        id: 'wrist-flexion',
+        name: 'Wrist Flexion',
+        type: 'reps',
+        reps: 15,
+        sets: 3,
+        restBetweenSets: 30,
+        instructions: 'Rest forearm on table with wrist hanging off edge, bend wrist upward.'
+      },
+      {
+        id: 'wrist-extension',
+        name: 'Wrist Extension',
+        type: 'reps',
+        reps: 15,
+        sets: 3,
+        restBetweenSets: 30,
+        instructions: 'Rest forearm on table with wrist hanging off edge, bend wrist downward.'
+      }
+    ]
+  },
+  {
+    name: 'Hip',
+    exercises: [
+      {
+        id: 'hip-bridge',
+        name: 'Hip Bridge',
+        type: 'reps',
+        reps: 12,
+        sets: 3,
+        restBetweenSets: 45,
+        instructions: 'Lie on back with knees bent, lift hips toward ceiling.'
+      },
+      {
+        id: 'hip-flexor-stretch',
+        name: 'Hip Flexor Stretch',
+        type: 'timed',
+        duration: 30,
+        sets: 3,
+        restBetweenSets: 30,
+        instructions: 'Kneel on one knee, tuck pelvis and lean forward slightly.'
+      }
+    ]
   }
 ];
 
@@ -171,14 +217,23 @@ class ExerciseRecommendationService {
       return [];
     }
 
-    return area.exercises.map(exercise => ({
-      ...exercise,
-      id: `${exercise.id}-${Date.now()}`
-    }));
+    // Shuffle the exercises to provide variety
+    const shuffled = [...area.exercises]
+      .sort(() => Math.random() - 0.5)
+      .map(exercise => ({
+        ...exercise,
+        id: `${exercise.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      }));
+
+    return shuffled;
   }
 
   getSupportedInjuryTypes(): string[] {
-    return injuryAreas.map(area => area.name);
+    return injuryAreas.map(area => area.name).sort();
+  }
+
+  getAllExercises(): Exercise[] {
+    return injuryAreas.flatMap(area => area.exercises);
   }
 }
 
