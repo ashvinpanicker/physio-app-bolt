@@ -4,6 +4,7 @@ import { Plus, X, ChevronUp, ChevronDown, Brain, Shuffle } from 'lucide-react';
 import ExerciseCard from './ExerciseCard';
 import ExerciseForm from './ExerciseForm';
 import ExerciseRecommendationService from '../services/exerciseRecommendationService';
+import AIRecommendationService from '../services/aiRecommendationService';
 
 interface RoutineFormProps {
   routine?: Routine;
@@ -78,14 +79,19 @@ const RoutineForm: React.FC<RoutineFormProps> = ({ routine, onSave, onCancel }) 
     setSelectedInjuryType('');
   };
 
-  const handleShuffleRecommendations = () => {
-    const shuffled = [...recommendedExercises]
-      .sort(() => Math.random() - 0.5)
-      .map(exercise => ({
-        ...exercise,
-        id: `${exercise.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      }));
-    setRecommendedExercises(shuffled);
+  const handleShuffleRecommendations = async () => {
+    if (!selectedInjuryType) return;
+    
+    try {
+      const aiService = AIRecommendationService.getInstance();
+      const newRecommendations = await aiService.generateExercises(selectedInjuryType);
+      
+      if (newRecommendations.length > 0) {
+        setRecommendedExercises(newRecommendations);
+      }
+    } catch (error) {
+      console.error('Error getting AI recommendations:', error);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
