@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Exercise } from '../types/types';
 import Timer from './Timer';
 import RepCounter from './RepCounter';
