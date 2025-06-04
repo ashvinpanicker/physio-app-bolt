@@ -1,3 +1,5 @@
+import { Exercise } from '../types/types';
+
 export interface Exercise {
   id: string;
   name: string;
@@ -39,6 +41,7 @@ export interface AppState {
   sessions: WorkoutSession[];
   isListening: boolean;
   voiceSettings: VoiceSettings;
+  aiSuggestionsEnabled: boolean;
 }
 
 export interface VoiceCommand {
@@ -48,4 +51,8 @@ export interface VoiceCommand {
 
 export interface VoiceSettings {
   enabled: boolean;
+  volume?: number;
+  rate?: number;
+  pitch?: number;
+  voice?: SpeechSynthesisVoice | null;
 }
