@@ -64,9 +64,6 @@ const Timer: React.FC<TimerProps> = ({
   return (
     <div className={`flex flex-col items-center ${className}`}>
       <div className="relative w-40 h-40 flex items-center justify-center mb-4">
-        {/* Circle background */}
-        <div className="absolute inset-0 rounded-full bg-gray-100"></div>
-        
         {/* Progress circle */}
         <svg className="absolute inset-0 transform -rotate-90" viewBox="0 0 100 100">
           <circle
@@ -75,11 +72,19 @@ const Timer: React.FC<TimerProps> = ({
             r="45"
             fill="transparent"
             stroke="currentColor"
-            strokeWidth="8"
+            strokeWidth="4"
             strokeDasharray={`${2 * Math.PI * 45}`}
             strokeDashoffset={`${2 * Math.PI * 45 * (1 - progress / 100)}`}
-            className={getColorClass()}
-            style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+            className={`${getColorClass()} transition-all duration-300`}
+          />
+          <circle
+            cx="50"
+            cy="50"
+            r="45"
+            fill="transparent"
+            stroke="currentColor"
+            strokeWidth="1"
+            className="text-gray-200"
           />
         </svg>
         
@@ -87,16 +92,16 @@ const Timer: React.FC<TimerProps> = ({
         <Clock className="absolute top-4 left-1/2 transform -translate-x-1/2 text-gray-400" size={24} />
         
         {/* Time display */}
-        <div className={`relative z-10 text-4xl font-bold ${getColorClass()} bg-white bg-opacity-90 px-3 py-1 rounded-lg`}>
+        <div className={`relative z-10 text-4xl font-bold ${getColorClass()} transition-colors duration-300`}>
           {formatTime(time)}
         </div>
       </div>
       
-      <div className="flex space-x-2">
+      <div className="flex space-x-3">
         {!isActive && !isPaused ? (
           <button 
             onClick={start}
-            className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-all duration-300 transform hover:scale-105"
             aria-label="Start timer"
           >
             <Play size={20} />
@@ -104,7 +109,7 @@ const Timer: React.FC<TimerProps> = ({
         ) : isPaused ? (
           <button 
             onClick={resume}
-            className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-all duration-300 transform hover:scale-105"
             aria-label="Resume timer"
           >
             <Play size={20} />
@@ -112,7 +117,7 @@ const Timer: React.FC<TimerProps> = ({
         ) : (
           <button 
             onClick={pause}
-            className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-all duration-300 transform hover:scale-105"
             aria-label="Pause timer"
           >
             <Pause size={20} />
@@ -121,7 +126,7 @@ const Timer: React.FC<TimerProps> = ({
         
         <button 
           onClick={() => reset(initialTime)}
-          className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
+          className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-all duration-300 transform hover:scale-105"
           aria-label="Reset timer"
         >
           <RotateCcw size={20} />
@@ -130,7 +135,7 @@ const Timer: React.FC<TimerProps> = ({
         {onSkip && (
           <button 
             onClick={onSkip}
-            className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500 text-white hover:bg-red-600 transition-all duration-300 transform hover:scale-105"
             aria-label="Skip timer"
           >
             <Clock size={20} className="rotate-45" />

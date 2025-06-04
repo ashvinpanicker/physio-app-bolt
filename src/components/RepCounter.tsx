@@ -67,41 +67,51 @@ const RepCounter: React.FC<RepCounterProps> = ({
   return (
     <div className={`flex flex-col items-center ${className}`}>
       <div className="relative w-40 h-40 flex items-center justify-center mb-4">
-        {/* Circle background */}
-        <div className="absolute inset-0 rounded-full bg-gray-100"></div>
-        
         {/* Progress circle */}
-        {targetReps && (
-          <svg className="absolute inset-0 transform -rotate-90" viewBox="0 0 100 100">
-            <circle
-              cx="50"
-              cy="50"
-              r="45"
-              fill="transparent"
-              stroke={isComplete ? '#10B981' : '#3B82F6'}
-              strokeWidth="8"
-              strokeDasharray={`${2 * Math.PI * 45}`}
-              strokeDashoffset={`${2 * Math.PI * 45 * (1 - progress / 100)}`}
-              style={{ transition: 'stroke-dashoffset 0.3s ease' }}
-            />
-          </svg>
-        )}
+        <svg className="absolute inset-0 transform -rotate-90" viewBox="0 0 100 100">
+          {targetReps && (
+            <>
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="transparent"
+                stroke="currentColor"
+                strokeWidth="4"
+                strokeDasharray={`${2 * Math.PI * 45}`}
+                strokeDashoffset={`${2 * Math.PI * 45 * (1 - progress / 100)}`}
+                className={`${isComplete ? 'text-green-500' : 'text-blue-500'} transition-all duration-300`}
+              />
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                fill="transparent"
+                stroke="currentColor"
+                strokeWidth="1"
+                className="text-gray-200"
+              />
+            </>
+          )}
+        </svg>
         
         {/* Rep count display */}
-        <div className="relative z-10 bg-white bg-opacity-90 px-4 py-2 rounded-lg">
-          <div className="text-5xl font-bold text-gray-800">
+        <div className="relative z-10 text-center">
+          <div className={`text-5xl font-bold ${isComplete ? 'text-green-500' : 'text-gray-800'} transition-colors duration-300`}>
             {count}
-            {targetReps && (
-              <span className="text-2xl text-gray-500">/{targetReps}</span>
-            )}
           </div>
+          {targetReps && (
+            <div className="text-lg text-gray-500 mt-1">
+              of {targetReps}
+            </div>
+          )}
         </div>
       </div>
       
       <div className="flex space-x-3">
         <button 
           onClick={decrement}
-          className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500 text-white hover:bg-red-600 transition-colors"
+          className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500 text-white hover:bg-red-600 transition-all duration-300 transform hover:scale-105"
           aria-label="Decrease repetition count"
         >
           <Minus size={20} />
@@ -109,7 +119,7 @@ const RepCounter: React.FC<RepCounterProps> = ({
         
         <button 
           onClick={increment}
-          className={`flex items-center justify-center w-16 h-16 rounded-full text-white transition-colors ${
+          className={`flex items-center justify-center w-16 h-16 rounded-full text-white transition-all duration-300 transform hover:scale-105 ${
             isComplete ? 'bg-green-500 hover:bg-green-600' : 'bg-blue-500 hover:bg-blue-600'
           }`}
           aria-label="Increase repetition count"
@@ -119,19 +129,21 @@ const RepCounter: React.FC<RepCounterProps> = ({
         
         <button 
           onClick={reset}
-          className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
+          className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-all duration-300 transform hover:scale-105"
           aria-label="Reset repetition count"
         >
           <RotateCcw size={20} />
         </button>
 
-        <button 
-          onClick={handleSkip}
-          className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-500 text-white hover:bg-gray-600 transition-colors"
-          aria-label="Skip exercise"
-        >
-          <X size={20} />
-        </button>
+        {onSkip && (
+          <button 
+            onClick={handleSkip}
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-500 text-white hover:bg-gray-600 transition-all duration-300 transform hover:scale-105"
+            aria-label="Skip exercise"
+          >
+            <X size={20} />
+          </button>
+        )}
       </div>
     </div>
   );
