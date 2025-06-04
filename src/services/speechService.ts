@@ -5,11 +5,11 @@ class SpeechService {
   private volume = 1;
   private rate = 1;
   private pitch = 1;
+  private enabled = true;
 
   private constructor() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       this.synthesis = window.speechSynthesis;
-      // Handle voice loading which may be asynchronous
       if (this.synthesis.getVoices().length > 0) {
         this.setPreferredVoice();
       } else {
@@ -31,30 +31,30 @@ class SpeechService {
     if (!this.synthesis) return;
     
     const voices = this.synthesis.getVoices();
-    // Prefer English voices
     this.voice = voices.find(voice => 
       voice.lang.startsWith('en-') && voice.localService
     ) || voices[0];
   }
 
-  setVoiceSettings(settings?: {
-    volume?: number;
-    rate?: number;
-    pitch?: number;
-    voice?: SpeechSynthesisVoice;
+  setVoiceSettings(settings: {
+    enabled: boolean;
+    volume: number;
+    rate: number;
+    pitch: number;
+    voice?: SpeechSynthesisVoice | null;
   }) {
-    if (!settings) return;
-
-    if (settings.volume !== undefined) this.volume = settings.volume;
-    if (settings.rate !== undefined) this.rate = settings.rate;
-    if (settings.pitch !== undefined) this.pitch = settings.pitch;
-    if (settings.voice) this.voice = settings.voice;
+    this.enabled = settings.enabled;
+    this.volume = settings.volume;
+    this.rate = settings.rate;
+    this.pitch = settings.pitch;
+    if (settings.voice) {
+      this.voice = settings.voice;
+    }
   }
 
   speak(text: string, priority: boolean = false) {
-    if (!this.synthesis) return;
+    if (!this.synthesis || !this.enabled) return;
 
-    // Cancel any ongoing speech if this is a priority message
     if (priority) {
       this.synthesis.cancel();
     }
@@ -69,7 +69,7 @@ class SpeechService {
   }
 
   announceExerciseStart(exerciseName: string, setNumber: number, totalSets: number) {
-    this.speak(`Beginning ${exerciseName}, set ${setNumber} of ${totalSets}`, true);
+    this.speak(`${exerciseName}, set ${setNumber} of ${totalSets}`, true);
   }
 
   announceCountdown(number: number) {
@@ -77,36 +77,32 @@ class SpeechService {
   }
 
   announceRestPeriod(duration: number) {
-    this.speak(`Rest period begins now. ${duration} seconds rest.`, true);
+    this.speak(`Rest period, ${duration} seconds`, true);
   }
 
   announceSetComplete() {
-    this.speak("Set complete. Well done!", true);
+    this.speak("Set complete", true);
   }
 
   announceNextSet() {
-    this.speak("Prepare for the next set.", true);
+    this.speak("Next set", true);
   }
 
   announceWorkoutComplete() {
-    this.speak("Excellent work! Workout complete.", true);
-  }
-
-  provideMotivation() {
-    const phrases = [
-      "Maintain proper form",
-      "Keep going, you're doing great",
-      "Focus on controlled movements",
-      "Excellent form",
-      "Stay strong",
-      "You've got this"
-    ];
-    this.speak(phrases[Math.floor(Math.random() * phrases.length)]);
+    this.speak("Workout complete", true);
   }
 
   stop() {
     if (!this.synthesis) return;
     this.synthesis.cancel();
+  }
+
+  getVoices(): SpeechSynthesisVoice[] {
+    return this.synthesis ? this.synthesis.getVoices() : [];
+  }
+
+  getCurrentVoice(): SpeechSynthesisVoice | null {
+    return this.voice;
   }
 }
 

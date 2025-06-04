@@ -52,17 +52,15 @@ const useVoiceRecognition = ({ onCommand, isEnabled }: VoiceRecognitionHookProps
     }
 
     // Navigation commands
-    if (lowerText.includes('start')) return { type: 'start' };
-    if (lowerText.includes('stop')) return { type: 'stop' };
-    if (lowerText.includes('next')) return { type: 'next' };
-    if (lowerText.includes('previous')) return { type: 'previous' };
+    if (lowerText === 'start') return { type: 'start' };
+    if (lowerText === 'stop') return { type: 'stop' };
+    if (lowerText === 'next') return { type: 'next' };
+    if (lowerText === 'previous') return { type: 'previous' };
 
     // Routine selection
-    if (lowerText.includes('routine')) {
-      const routineName = lowerText.replace('routine', '').trim();
-      if (routineName) {
-        return { type: 'routine', value: routineName };
-      }
+    const routineMatch = lowerText.match(/routine\s+(.+)/);
+    if (routineMatch && routineMatch[1]) {
+      return { type: 'routine', value: routineMatch[1] };
     }
 
     return null;
