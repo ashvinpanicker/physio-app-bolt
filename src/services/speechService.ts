@@ -158,8 +158,13 @@ class SpeechService {
     utterance.rate = this.rate;
 
     // Add error handling for the utterance
-    utterance.onerror = (event) => {
-      console.error('Utterance error:', event);
+    utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
+      // Check if the error is due to cancellation
+      if (event.error === 'canceled') {
+        console.log('Speech synthesis canceled');
+      } else {
+        console.error('Speech synthesis error:', event.error);
+      }
     };
 
     // Cancel current speech and clear queue for priority messages
