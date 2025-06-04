@@ -3,7 +3,6 @@ import { AppState, Routine, Exercise, WorkoutSession, VoiceCommand, VoiceSetting
 import useLocalStorage from '../hooks/useLocalStorage';
 import SpeechService from '../services/speechService';
 
-// Initial state
 const initialState: AppState = {
   routines: [],
   currentRoutine: null,
@@ -18,10 +17,10 @@ const initialState: AppState = {
     rate: 1,
     pitch: 1,
     voice: null
-  }
+  },
+  aiSuggestionsEnabled: true
 };
 
-// Action types
 type Action =
   | { type: 'SET_ROUTINES'; payload: Routine[] }
   | { type: 'ADD_ROUTINE'; payload: Routine }
@@ -38,9 +37,9 @@ type Action =
   | { type: 'SET_SESSIONS'; payload: WorkoutSession[] }
   | { type: 'SET_LISTENING'; payload: boolean }
   | { type: 'SET_VOICE_SETTINGS'; payload: Partial<VoiceSettings> }
+  | { type: 'SET_AI_SUGGESTIONS_ENABLED'; payload: boolean }
   | { type: 'PROCESS_VOICE_COMMAND'; payload: VoiceCommand };
 
-// Reducer function
 const appReducer = (state: AppState, action: Action): AppState => {
   switch (action.type) {
     case 'SET_ROUTINES':
@@ -157,6 +156,11 @@ const appReducer = (state: AppState, action: Action): AppState => {
           ...action.payload
         }
       };
+    case 'SET_AI_SUGGESTIONS_ENABLED':
+      return {
+        ...state,
+        aiSuggestionsEnabled: action.payload
+      };
     case 'PROCESS_VOICE_COMMAND': {
       const command = action.payload;
       
@@ -196,7 +200,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
   }
 };
 
-// Create context
 interface AppContextType {
   state: AppState;
   dispatch: React.Dispatch<Action>;
@@ -204,7 +207,6 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Provider component
 interface AppProviderProps {
   children: ReactNode;
 }
@@ -214,26 +216,27 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     routines: Routine[];
     sessions: WorkoutSession[];
     voiceSettings: VoiceSettings;
-  }>('physioApp', { 
-    routines: [], 
+    aiSuggestionsEnabled: boolean;
+  }>('physioApp', {
+    routines: [],
     sessions: [],
-    voiceSettings: initialState.voiceSettings
+    voiceSettings: initialState.voiceSettings,
+    aiSuggestionsEnabled: true
   });
 
   const [state, dispatch] = useReducer(appReducer, {
     ...initialState,
     routines: savedState.routines,
     sessions: savedState.sessions,
-    voiceSettings: savedState.voiceSettings
+    voiceSettings: savedState.voiceSettings,
+    aiSuggestionsEnabled: savedState.aiSuggestionsEnabled
   });
 
-  // Update speech service when voice settings change
   useEffect(() => {
     const speechService = SpeechService.getInstance();
     speechService.setVoiceSettings(state.voiceSettings);
   }, [state.voiceSettings]);
 
-  // Stop speech when workout is not active
   useEffect(() => {
     const speechService = SpeechService.getInstance();
     if (!state.isWorkoutActive) {
@@ -241,21 +244,20 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   }, [state.isWorkoutActive]);
 
-  // Save certain parts of state to localStorage
   useEffect(() => {
     setSavedState({
       routines: state.routines,
       sessions: state.sessions,
-      voiceSettings: state.voiceSettings
+      voiceSettings: state.voiceSettings,
+      aiSuggestionsEnabled: state.aiSuggestionsEnabled
     });
-  }, [state.routines, state.sessions, state.voiceSettings, setSavedState]);
+  }, [state.routines, state.sessions, state.voiceSettings, state.aiSuggestionsEnabled, setSavedState]);
 
   const value = useMemo(() => ({ state, dispatch }), [state]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
-// Custom hook for using the context
 export const useAppContext = (): AppContextType => {
   const context = useContext(AppContext);
   if (context === undefined) {
