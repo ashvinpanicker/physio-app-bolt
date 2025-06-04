@@ -6,17 +6,46 @@ class SpeechService {
   private rate = 1;
   private pitch = 1;
   private enabled = true;
+  private queue: SpeechSynthesisUtterance[] = [];
+  private speaking = false;
 
   private constructor() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       this.synthesis = window.speechSynthesis;
-      // Initialize voices immediately if available
+      
+      // Initialize voices
       this.setPreferredVoice();
-      // Also listen for voices changed event
+      
+      // Listen for voices changed event
       this.synthesis.addEventListener('voiceschanged', () => {
         this.setPreferredVoice();
       });
+
+      // Handle speech end events
+      this.handleSpeechEvents();
     }
+  }
+
+  private handleSpeechEvents() {
+    if (!this.synthesis) return;
+
+    this.synthesis.addEventListener('end', () => {
+      this.speaking = false;
+      this.processQueue();
+    });
+
+    this.synthesis.addEventListener('error', () => {
+      this.speaking = false;
+      this.processQueue();
+    });
+  }
+
+  private processQueue() {
+    if (!this.synthesis || !this.enabled || this.speaking || this.queue.length === 0) return;
+    
+    this.speaking = true;
+    const utterance = this.queue.shift()!;
+    this.synthesis.speak(utterance);
   }
 
   static getInstance(): SpeechService {
@@ -57,12 +86,7 @@ class SpeechService {
   }
 
   speak(text: string, priority: boolean = false) {
-    if (!this.synthesis || !this.enabled) return;
-
-    // Cancel any ongoing speech if this is a priority message
-    if (priority) {
-      this.synthesis.cancel();
-    }
+    if (!this.synthesis || !this.enabled || !text) return;
 
     const utterance = new SpeechSynthesisUtterance(text);
     if (this.voice) {
@@ -72,12 +96,20 @@ class SpeechService {
     utterance.rate = this.rate;
     utterance.pitch = this.pitch;
 
-    this.synthesis.speak(utterance);
+    // Cancel current speech and clear queue for priority messages
+    if (priority) {
+      this.synthesis.cancel();
+      this.queue = [];
+      this.speaking = false;
+    }
+
+    this.queue.push(utterance);
+    this.processQueue();
   }
 
   announceExerciseStart(exerciseName: string, setNumber: number, totalSets: number) {
     if (!this.enabled) return;
-    const message = `${exerciseName}. Set ${setNumber} of ${totalSets}`;
+    const message = `Starting ${exerciseName}. Set ${setNumber} of ${totalSets}`;
     this.speak(message, true);
   }
 
@@ -98,21 +130,24 @@ class SpeechService {
 
   announceNextSet() {
     if (!this.enabled) return;
-    this.speak("Next set", true);
+    this.speak("Starting next set", true);
   }
 
   announceWorkoutComplete() {
     if (!this.enabled) return;
-    this.speak("Workout complete. Great job!", true);
+    this.speak("Workout complete! Great job!", true);
   }
 
   stop() {
     if (!this.synthesis) return;
     this.synthesis.cancel();
+    this.queue = [];
+    this.speaking = false;
   }
 
   getVoices(): SpeechSynthesisVoice[] {
-    return this.synthesis ? this.synthesis.getVoices() : [];
+    if (!this.synthesis) return [];
+    return this.synthesis.getVoices();
   }
 
   getCurrentVoice(): SpeechSynthesisVoice | null {
