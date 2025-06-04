@@ -37,10 +37,8 @@ const Timer: React.FC<TimerProps> = ({
       }
     } else if (announceProgress && isActive && !isPaused) {
       if (time <= 5) {
-        // Announce countdown for last 5 seconds
         speechService.announceCountdown(time);
       } else if (time % 30 === 0) {
-        // Announce every 30 seconds
         speechService.speak(`${time} seconds remaining`);
       }
     }
@@ -67,7 +65,7 @@ const Timer: React.FC<TimerProps> = ({
     <div className={`flex flex-col items-center ${className}`}>
       <div className="relative w-40 h-40 flex items-center justify-center mb-4">
         {/* Circle background */}
-        <div className="absolute inset-0 rounded-full bg-gray-200"></div>
+        <div className="absolute inset-0 rounded-full bg-gray-100"></div>
         
         {/* Progress circle */}
         <svg className="absolute inset-0 transform -rotate-90" viewBox="0 0 100 100">
@@ -86,10 +84,10 @@ const Timer: React.FC<TimerProps> = ({
         </svg>
         
         {/* Timer icon */}
-        <Clock className="absolute top-4 left-1/2 transform -translate-x-1/2 text-gray-500" size={24} />
+        <Clock className="absolute top-4 left-1/2 transform -translate-x-1/2 text-gray-400" size={24} />
         
         {/* Time display */}
-        <div className={`text-4xl font-bold ${getColorClass()}`}>
+        <div className={`relative z-10 text-4xl font-bold ${getColorClass()} bg-white bg-opacity-90 px-3 py-1 rounded-lg`}>
           {formatTime(time)}
         </div>
       </div>
@@ -123,7 +121,7 @@ const Timer: React.FC<TimerProps> = ({
         
         <button 
           onClick={() => reset(initialTime)}
-          className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-300 text-gray-700 hover:bg-gray-400 transition-colors"
+          className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
           aria-label="Reset timer"
         >
           <RotateCcw size={20} />

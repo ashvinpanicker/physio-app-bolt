@@ -34,7 +34,6 @@ const RepCounter: React.FC<RepCounterProps> = ({
         onComplete();
       }
     } else if (count > 0 && count % 5 === 0) {
-      // Announce every 5 reps
       speechService.speak(count.toString());
     }
   }, [count, targetReps, onComplete, isComplete]);
@@ -69,7 +68,7 @@ const RepCounter: React.FC<RepCounterProps> = ({
     <div className={`flex flex-col items-center ${className}`}>
       <div className="relative w-40 h-40 flex items-center justify-center mb-4">
         {/* Circle background */}
-        <div className="absolute inset-0 rounded-full bg-gray-200"></div>
+        <div className="absolute inset-0 rounded-full bg-gray-100"></div>
         
         {/* Progress circle */}
         {targetReps && (
@@ -89,11 +88,13 @@ const RepCounter: React.FC<RepCounterProps> = ({
         )}
         
         {/* Rep count display */}
-        <div className="text-5xl font-bold text-gray-800">
-          {count}
-          {targetReps && (
-            <span className="text-2xl text-gray-500">/{targetReps}</span>
-          )}
+        <div className="relative z-10 bg-white bg-opacity-90 px-4 py-2 rounded-lg">
+          <div className="text-5xl font-bold text-gray-800">
+            {count}
+            {targetReps && (
+              <span className="text-2xl text-gray-500">/{targetReps}</span>
+            )}
+          </div>
         </div>
       </div>
       
