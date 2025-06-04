@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Exercise } from '../types/types';
 import Timer from './Timer';
 import RepCounter from './RepCounter';
-import { ArrowLeft, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import SpeechService from '../services/speechService';
 
 interface WorkoutViewProps {
@@ -23,10 +23,8 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
   const speechService = SpeechService.getInstance();
   
   useEffect(() => {
-    // Announce exercise start
     speechService.announceExerciseStart(exercise.name, setIndex + 1, exercise.sets);
     
-    // Provide initial instruction if available
     if (exercise.instructions) {
       setTimeout(() => {
         speechService.speak(exercise.instructions!, false);
@@ -38,25 +36,26 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
     speechService.announceSetComplete();
 
     if (setIndex < exercise.sets - 1) {
-      // More sets to go, start rest period
       setIsResting(true);
       speechService.announceRestPeriod(exercise.restBetweenSets);
     } else {
-      // Last set completed
-      setShowCompletionMessage(true);
-      speechService.announceWorkoutComplete();
-      const timer = setTimeout(() => {
-        setShowCompletionMessage(false);
-        onComplete();
-      }, 1500);
-      
-      return () => clearTimeout(timer);
+      showCompletionAndProceed();
     }
   };
   
   const handleRestComplete = () => {
     setIsResting(false);
     speechService.announceNextSet();
+  };
+
+  const showCompletionAndProceed = () => {
+    setShowCompletionMessage(true);
+    speechService.announceWorkoutComplete();
+    const timer = setTimeout(() => {
+      setShowCompletionMessage(false);
+      onComplete();
+    }, 1500);
+    return () => clearTimeout(timer);
   };
 
   const handleSkip = () => {
@@ -108,6 +107,7 @@ const WorkoutView: React.FC<WorkoutViewProps> = ({
                 <RepCounter 
                   targetReps={exercise.reps} 
                   onComplete={handleExerciseComplete}
+                  onSkip={handleSkip}
                 />
               )}
               
