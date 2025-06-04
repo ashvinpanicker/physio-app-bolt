@@ -16,6 +16,7 @@ const useTimer = (initialTime: number = 60): TimerHookReturn => {
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const countRef = useRef<number | null>(null);
+  const initialTimeRef = useRef(initialTime);
 
   const clearTimer = useCallback(() => {
     if (countRef.current) {
@@ -25,12 +26,12 @@ const useTimer = (initialTime: number = 60): TimerHookReturn => {
   }, []);
 
   const start = useCallback(() => {
+    clearTimer();
+    setTime(initialTimeRef.current);
     setIsActive(true);
     setIsPaused(false);
-    setTime(initialTime); // Reset time when starting
-    clearTimer();
     countRef.current = window.setInterval(() => {
-      setTime((prevTime) => {
+      setTime(prevTime => {
         if (prevTime <= 1) {
           clearTimer();
           setIsActive(false);
@@ -39,7 +40,7 @@ const useTimer = (initialTime: number = 60): TimerHookReturn => {
         return prevTime - 1;
       });
     }, 1000);
-  }, [initialTime, clearTimer]);
+  }, [clearTimer]);
 
   const pause = useCallback(() => {
     clearTimer();
@@ -47,39 +48,42 @@ const useTimer = (initialTime: number = 60): TimerHookReturn => {
   }, [clearTimer]);
 
   const resume = useCallback(() => {
-    if (isPaused) {
-      setIsPaused(false);
-      countRef.current = window.setInterval(() => {
-        setTime((prevTime) => {
-          if (prevTime <= 1) {
-            clearTimer();
-            setIsActive(false);
-            return 0;
-          }
-          return prevTime - 1;
-        });
-      }, 1000);
-    }
+    if (!isPaused) return;
+    
+    setIsPaused(false);
+    countRef.current = window.setInterval(() => {
+      setTime(prevTime => {
+        if (prevTime <= 1) {
+          clearTimer();
+          setIsActive(false);
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
   }, [isPaused, clearTimer]);
 
   const reset = useCallback((newTime?: number) => {
     clearTimer();
-    setTime(newTime !== undefined ? newTime : initialTime);
+    const resetTime = newTime !== undefined ? newTime : initialTimeRef.current;
+    initialTimeRef.current = resetTime;
+    setTime(resetTime);
     setIsActive(false);
     setIsPaused(false);
-  }, [initialTime, clearTimer]);
+  }, [clearTimer]);
 
   const restart = useCallback((newTime?: number) => {
     reset(newTime);
     start();
   }, [reset, start]);
 
-  // Reset timer when initialTime changes
   useEffect(() => {
-    setTime(initialTime);
-  }, [initialTime]);
+    initialTimeRef.current = initialTime;
+    if (!isActive && !isPaused) {
+      setTime(initialTime);
+    }
+  }, [initialTime, isActive, isPaused]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       clearTimer();
