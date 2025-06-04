@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { 
   ArrowLeft, Mic, HelpCircle, 
-  ChevronRight, Trash 
+  ChevronRight, Trash, Brain 
 } from 'lucide-react';
 import SpeechService from '../services/speechService';
 
@@ -17,6 +17,13 @@ const Settings: React.FC = () => {
     dispatch({
       type: 'SET_VOICE_SETTINGS',
       payload: { enabled: !state.voiceSettings.enabled }
+    });
+  };
+
+  const handleAISuggestionsToggle = () => {
+    dispatch({
+      type: 'SET_AI_SUGGESTIONS_ENABLED',
+      payload: !state.aiSuggestionsEnabled
     });
   };
 
@@ -77,6 +84,30 @@ const Settings: React.FC = () => {
                 Test Voice Settings
               </button>
             )}
+          </div>
+        </div>
+
+        <div className="p-4 border-b border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Exercise Recommendations</h2>
+          
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                  <Brain className="text-purple-600" size={16} />
+                </div>
+                <span className="text-gray-700">AI Exercise Suggestions</span>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={state.aiSuggestionsEnabled}
+                  onChange={handleAISuggestionsToggle}
+                />
+                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
           </div>
         </div>
         
