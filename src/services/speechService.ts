@@ -73,17 +73,18 @@ class SpeechService {
 
   announceExerciseStart(exerciseName: string, setNumber: number, totalSets: number) {
     if (!this.enabled) return;
-    this.speak(`${exerciseName}, set ${setNumber} of ${totalSets}`, true);
+    const message = `${exerciseName}. Set ${setNumber} of ${totalSets}`;
+    this.speak(message, true);
   }
 
   announceCountdown(number: number) {
-    if (!this.enabled) return;
+    if (!this.enabled || number > 5) return; // Only announce last 5 seconds
     this.speak(number.toString());
   }
 
   announceRestPeriod(duration: number) {
     if (!this.enabled) return;
-    this.speak(`Rest period, ${duration} seconds`, true);
+    this.speak(`Rest for ${duration} seconds`, true);
   }
 
   announceSetComplete() {

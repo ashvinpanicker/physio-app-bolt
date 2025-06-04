@@ -32,6 +32,7 @@ const Timer: React.FC<TimerProps> = ({
         onComplete();
       }
     } else if (isActive && !isPaused && time <= 5) {
+      // Announce countdown for last 5 seconds
       speechService.announceCountdown(time);
     }
   }, [time, onComplete, isActive, isPaused]);
