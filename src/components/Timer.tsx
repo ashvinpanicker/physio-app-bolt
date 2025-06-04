@@ -104,7 +104,7 @@ const Timer: React.FC<TimerProps> = ({
         ) : isPaused ? (
           <button 
             onClick={resume}
-            className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500 text-white hover:bg-green-600 transition-colors"
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors"
             aria-label="Resume timer"
           >
             <Play size={20} />
@@ -112,7 +112,7 @@ const Timer: React.FC<TimerProps> = ({
         ) : (
           <button 
             onClick={pause}
-            className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500 text-white hover:bg-blue-600 transition-colors"
             aria-label="Pause timer"
           >
             <Pause size={20} />
