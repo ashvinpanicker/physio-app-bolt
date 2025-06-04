@@ -10,14 +10,28 @@ const useVoiceRecognition = ({ onCommand, isEnabled }: VoiceRecognitionHookProps
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
   // Check if the browser supports SpeechRecognition
   const SpeechRecognition = window.SpeechRecognition || window['webkitSpeechRecognition'];
   const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 
+  // Check microphone permissions
+  const checkMicrophonePermission = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop());
+      setHasPermission(true);
+      setError(null);
+    } catch (err) {
+      setHasPermission(false);
+      setError('Microphone permission denied. Please enable microphone access.');
+      console.error('Microphone permission error:', err);
+    }
+  }, []);
+
   const parseCommand = useCallback((text: string): VoiceCommand | null => {
-    // Convert to lowercase for easier matching
-    const lowerText = text.toLowerCase();
+    const lowerText = text.toLowerCase().trim();
 
     // Timer commands
     if (lowerText.includes('timer') || lowerText.includes('time')) {
@@ -32,22 +46,6 @@ const useVoiceRecognition = ({ onCommand, isEnabled }: VoiceRecognitionHookProps
       const matches = lowerText.match(/(\d+)\s*(reps|rep|repetitions|repetition)/);
       if (matches && matches[1]) {
         return { type: 'rep', value: parseInt(matches[1], 10) };
-      }
-    }
-
-    // Set commands
-    if (lowerText.includes('set')) {
-      const matches = lowerText.match(/(\d+)\s*(sets|set)/);
-      if (matches && matches[1]) {
-        return { type: 'set', value: parseInt(matches[1], 10) };
-      }
-    }
-
-    // Rest commands
-    if (lowerText.includes('rest')) {
-      const matches = lowerText.match(/rest\s*(\d+)/);
-      if (matches && matches[1]) {
-        return { type: 'rest', value: parseInt(matches[1], 10) };
       }
     }
 
@@ -66,9 +64,18 @@ const useVoiceRecognition = ({ onCommand, isEnabled }: VoiceRecognitionHookProps
     return null;
   }, []);
 
-  const startListening = useCallback(() => {
+  const startListening = useCallback(async () => {
     if (!recognition) {
       setError('Speech recognition is not supported in this browser.');
+      return;
+    }
+
+    // Check permission before starting
+    if (hasPermission === null) {
+      await checkMicrophonePermission();
+    }
+
+    if (hasPermission === false) {
       return;
     }
 
@@ -80,25 +87,30 @@ const useVoiceRecognition = ({ onCommand, isEnabled }: VoiceRecognitionHookProps
       recognition.onstart = () => {
         setIsListening(true);
         setError(null);
+        console.log('Voice recognition started');
       };
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         const current = event.resultIndex;
         const newTranscript = event.results[current][0].transcript;
+        console.log('Recognized text:', newTranscript);
         setTranscript(newTranscript);
 
         const command = parseCommand(newTranscript);
         if (command) {
+          console.log('Parsed command:', command);
           onCommand(command);
         }
       };
 
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+        console.error('Speech recognition error:', event.error);
         setError(`Speech recognition error: ${event.error}`);
         setIsListening(false);
       };
 
       recognition.onend = () => {
+        console.log('Voice recognition ended');
         if (isListening) {
           recognition.start();
         }
@@ -106,38 +118,47 @@ const useVoiceRecognition = ({ onCommand, isEnabled }: VoiceRecognitionHookProps
 
       recognition.start();
     } catch (err) {
+      console.error('Error starting speech recognition:', err);
       setError(`Error starting speech recognition: ${err}`);
       setIsListening(false);
     }
-  }, [recognition, isListening, parseCommand, onCommand]);
+  }, [recognition, isListening, parseCommand, onCommand, hasPermission, checkMicrophonePermission]);
 
   const stopListening = useCallback(() => {
     if (recognition) {
       recognition.stop();
       setIsListening(false);
+      console.log('Voice recognition stopped');
     }
   }, [recognition]);
 
   useEffect(() => {
-    if (isEnabled && !isListening) {
-      startListening();
-    } else if (!isEnabled && isListening) {
-      stopListening();
-    }
+    // Check microphone permission on mount
+    checkMicrophonePermission();
 
     return () => {
       if (recognition) {
         recognition.stop();
       }
     };
-  }, [isEnabled, isListening, startListening, stopListening, recognition]);
+  }, [checkMicrophonePermission, recognition]);
+
+  useEffect(() => {
+    if (isEnabled && !isListening && hasPermission) {
+      startListening();
+    } else if (!isEnabled && isListening) {
+      stopListening();
+    }
+  }, [isEnabled, isListening, startListening, stopListening, hasPermission]);
 
   return {
     isListening,
     transcript,
     error,
+    hasPermission,
     startListening,
-    stopListening
+    stopListening,
+    checkMicrophonePermission
   };
 };
 
