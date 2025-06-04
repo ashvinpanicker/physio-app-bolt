@@ -8,12 +8,15 @@ class SpeechService {
   private queue: SpeechSynthesisUtterance[] = [];
   private speaking = false;
   private initialized = false;
+  private initializationPromise: Promise<void> | null = null;
 
   private constructor() {
-    this.initializeSynthesis();
+    this.initializationPromise = this.initializeSynthesis();
   }
 
   private async initializeSynthesis() {
+    if (this.initialized) return;
+
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
       console.error('Speech synthesis not supported');
       return;
@@ -21,25 +24,20 @@ class SpeechService {
 
     this.synthesis = window.speechSynthesis;
 
-    // Force voices to load
-    await this.loadVoices();
-    
-    // Set up event listeners
-    this.synthesis.addEventListener('voiceschanged', () => {
-      this.setDefaultVoice();
-    });
-
-    this.handleSpeechEvents();
-    this.initialized = true;
+    try {
+      await this.loadVoices();
+      this.handleSpeechEvents();
+      this.initialized = true;
+    } catch (error) {
+      console.error('Failed to initialize speech synthesis:', error);
+    }
   }
 
   private async loadVoices(): Promise<void> {
     if (!this.synthesis) return;
 
-    // Try to get voices immediately
     let voices = this.synthesis.getVoices();
     
-    // If no voices are available, wait for them to load
     if (voices.length === 0) {
       try {
         await new Promise<void>((resolve, reject) => {
@@ -47,46 +45,26 @@ class SpeechService {
             reject(new Error('Timeout waiting for voices'));
           }, 5000);
 
-          this.synthesis!.addEventListener('voiceschanged', () => {
+          const voicesChangedHandler = () => {
             clearTimeout(timeout);
+            this.synthesis?.removeEventListener('voiceschanged', voicesChangedHandler);
             resolve();
-          }, { once: true });
+          };
+
+          this.synthesis.addEventListener('voiceschanged', voicesChangedHandler);
         });
 
         voices = this.synthesis.getVoices();
       } catch (error) {
         console.error('Error loading voices:', error);
+        return;
       }
     }
 
-    if (voices.length > 0) {
-      this.setDefaultVoice();
-    }
+    this.setDefaultVoice(voices);
   }
 
-  private handleSpeechEvents() {
-    if (!this.synthesis) return;
-
-    this.synthesis.addEventListener('end', () => {
-      console.log('Speech ended');
-      this.speaking = false;
-      this.processQueue();
-    });
-
-    this.synthesis.addEventListener('error', (event) => {
-      console.error('Speech synthesis error:', event);
-      this.speaking = false;
-      this.processQueue();
-    });
-  }
-
-  private setDefaultVoice() {
-    if (!this.synthesis) return;
-    
-    const voices = this.synthesis.getVoices();
-    console.log('Available voices:', voices.map(v => `${v.name} (${v.lang})`));
-
-    // Try to find a high-quality English voice
+  private setDefaultVoice(voices: SpeechSynthesisVoice[]) {
     this.voice = voices.find(voice => 
       voice.lang === 'en-US' && voice.name.includes('Samantha')
     ) || voices.find(voice => 
@@ -102,12 +80,29 @@ class SpeechService {
     }
   }
 
+  private handleSpeechEvents() {
+    if (!this.synthesis) return;
+
+    const handleEnd = () => {
+      this.speaking = false;
+      this.processQueue();
+    };
+
+    const handleError = (event: ErrorEvent) => {
+      console.error('Speech synthesis error:', event);
+      this.speaking = false;
+      this.processQueue();
+    };
+
+    this.synthesis.addEventListener('end', handleEnd);
+    this.synthesis.addEventListener('error', handleError);
+  }
+
   private async processQueue() {
     if (!this.synthesis || !this.enabled || this.speaking || this.queue.length === 0) return;
     
-    // Ensure synthesis is ready
     if (!this.initialized) {
-      await this.initializeSynthesis();
+      await this.initializationPromise;
     }
 
     this.speaking = true;
@@ -115,7 +110,6 @@ class SpeechService {
 
     try {
       this.synthesis.speak(utterance);
-      console.log('Speaking:', utterance.text);
     } catch (error) {
       console.error('Error speaking:', error);
       this.speaking = false;
